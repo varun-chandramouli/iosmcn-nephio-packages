@@ -9,7 +9,7 @@ spec:
   ref:
     branch: nephio-deploy-test
   secretRef:
-    name: iosmcncore-github-auth
+    name: iosmcn-github-auth
   ignore: |
     /*
     !/sdcore-helm-charts/**

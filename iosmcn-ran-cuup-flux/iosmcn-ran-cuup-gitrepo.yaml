@@ -9,7 +9,7 @@ spec:
   ref:
     branch: kube-orchestration
   secretRef:
-    name: free5gc-github-auth
+    name: iosmcn-github-auth
   ignore: |
     # exclude all
     /*
