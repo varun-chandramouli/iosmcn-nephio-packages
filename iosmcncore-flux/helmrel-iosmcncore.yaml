@@ -1,0 +1,23 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: iosmcncore 
+  namespace: iosmcncore
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: ./sdcore-helm-charts
+      version: '2.2.x'
+      sourceRef:
+        kind: GitRepository
+        name: iosmcn-core-gitrepo
+        namespace: flux-system
+      reconcileStrategy: Revision
+      interval: 1m
+  targetNamespace: iosmcncore
+  valuesFrom:
+  - kind: ConfigMap
+    name: iosmcncore-values
+    valuesKey: values.yaml
+

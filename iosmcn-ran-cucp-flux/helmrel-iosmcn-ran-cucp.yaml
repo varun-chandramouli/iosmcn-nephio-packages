@@ -1,0 +1,23 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: iosmcnran-cucp 
+  namespace: iosmcnran
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: ./cicd/oai-5g-ran/oai-cu-cp
+      version: '2.0.0'
+      sourceRef:
+        kind: GitRepository
+        name:  iosmcn-ran-cucp-gitrepo
+        namespace: flux-system
+      reconcileStrategy: Revision
+      interval: 1m
+  targetNamespace: iosmcnran
+  valuesFrom:
+  - kind: ConfigMap
+    name: iosmcn-ran-cucp-values
+    valuesKey: values.yaml
+

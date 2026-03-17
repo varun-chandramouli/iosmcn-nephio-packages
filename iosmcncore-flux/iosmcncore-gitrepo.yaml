@@ -1,0 +1,20 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: iosmcn-core-gitrepo
+  namespace: flux-system
+spec:
+  interval: 10s
+  url: https://github.com/varun-chandramouli/ios-mcn-core-helm-chart
+  ref:
+    branch: nephio-deploy-test
+  secretRef:
+    name: iosmcncore-github-auth
+  ignore: |
+    /*
+    !/sdcore-helm-charts/**
+    !/5g-control-plane/**
+    !/omec-control-plane/**
+    !/bess-upf/**
+    !/omec-sub-provision/**
+    !/5g-ran-sim/**

@@ -1,0 +1,17 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: iosmcn-ran-cuup-gitrepo
+  namespace: flux-system
+spec:
+  interval: 10s
+  url: https://github.com/ios-mcn-ran/ios-mcn-ran
+  ref:
+    branch: kube-orchestration
+  secretRef:
+    name: free5gc-github-auth
+  ignore: |
+    # exclude all
+    /*
+    # include charts dir
+    !/cicd/oai-5g-ran/oai-cu-up/**
