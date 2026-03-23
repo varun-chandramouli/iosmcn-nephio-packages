@@ -47,8 +47,6 @@ spec:
     repo: https://github.com/varun-chandramouli/iosmcn-nephio-packages.git
   type: git
 
-EOF
-
 
 5b. Open nephio-webui  using the link :   http://<vm/server ip>:7007
 5c. Click on mgmt link in the Repositories line of the  homepage. 
@@ -74,7 +72,38 @@ EOF
 5r.The rootsync installed in the core cluster  needs to be updated with correct IP of the core gitea repo.
  a) in the nephio homepage . Click on mgmt-staging link in the Repositories secion.
  b) select core-rootsync and in the next screen click on create new revision. In the next screen click on edit.
- c) select starlark Run option . Replace 172.x.x.x with the IP of the VM / Server where the gitea  is installed. this will      usually be the same VM / server where the nephio manangement cluster is running. Click on save.
+ c) select starlark Run option . Replace 172.x.x.x with the IP of the VM / Server where the gitea  is installed. this will usually be the same VM / server where the nephio manangement cluster is running. Click on save.
  d)  Click on save option in top right corner. Select propose and then approve.
  e) verify rootsync is created successfully in the core cluster with the command : 
     $ kubectl get rootsyncs.configsync.gke.io --context core-admin@core -A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+After provisioning the cluster using the byoh script follow the following steps on the server or VM where you want to deploy the iosmcn-ran
+
+
+# Check current state
+cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
+
+# Allocate 20 x 1Gi hugepages (leaves ~108Gi for everything else)
+echo 20 | sudo tee /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
+
+# Verify it took effect
+cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
+cat /sys/kernel/mm/hugepages/hugepages-1048576kB/free_hugepages
+
+
+echo 'vm.nr_hugepages=20' | sudo tee /etc/sysctl.d/99-hugepages.conf
+sudo sysctl -p /etc/sysctl.d/99-hugepages.conf
+
