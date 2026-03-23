@@ -1,36 +1,85 @@
 # iosmcn-nephio-packages
 
-After provisioning the cluster using the byoh script follow the following steps on the server or VM where you want to deploy the iosmcn-core
+This repository contains the deployment guide for provisioning **iosmcn-core** and **iosmcn-ran** using Nephio on BYOH (Bring Your Own Host) clusters.
 
-Step 1:
-# Increase inotify limits 
+---
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Deploying iosmcn-core](#deploying-iosmcn-core)
+  - [Step 1: Increase inotify Limits](#step-1-increase-inotify-limits)
+  - [Step 2: Install Dependencies](#step-2-install-dependencies)
+  - [Step 3: Install iosmcn Core](#step-3-install-iosmcn-core)
+  - [Step 4: Label the Core Cluster](#step-4-label-the-core-cluster)
+  - [Step 5: Prepare the Core Cluster with Package Variants](#step-5-prepare-the-core-cluster-with-package-variants)
+- [Deploying iosmcn-ran](#deploying-iosmcn-ran)
+  - [Step 1: Configure Hugepages](#step-1-configure-hugepages)
+  - [Step 2: Set Up the RAN Cluster](#step-2-set-up-the-ran-cluster)
+  - [Step 3: Deploy RAN Helm Charts](#step-3-deploy-ran-helm-charts)
+
+---
+
+## Prerequisites
+
+Ensure the cluster has been provisioned using the BYOH script before proceeding with either the core or RAN deployment.
+
+---
+
+## Deploying iosmcn-core
+
+Perform the following steps on the server or VM where you want to deploy the **iosmcn-core**.
+
+### Step 1: Increase inotify Limits
+
+```bash
+# Apply limits for the current session
 sudo sysctl fs.inotify.max_user_watches=524288
 sudo sysctl fs.inotify.max_user_instances=512
 sudo sysctl fs.file-max=2097152
+
+# Persist limits across reboots
 echo "fs.inotify.max_user_watches=524288" | sudo tee -a /etc/sysctl.conf
-echo "fs.inotify.max_user_instances=512" | sudo tee -a /etc/sysctl.conf
-echo "fs.file-max=2097152" | sudo tee -a /etc/sysctl.conf
+echo "fs.inotify.max_user_instances=512"  | sudo tee -a /etc/sysctl.conf
+echo "fs.file-max=2097152"               | sudo tee -a /etc/sysctl.conf
+```
 
-Step 2: 
-# Install the dependencies 
+### Step 2: Install Dependencies
+
+```bash
 sudo apt update
-sudo apt updgrade -y
+sudo apt upgrade -y
 sudo apt install make sshpass ansible -y
+```
 
-Step 3: 
-Download the iosmcn core release  and run  make 5gc-router-install
+### Step 3: Install iosmcn Core
 
-Step 4:
-Label the core cluster  with the following commands:
-kubectl label nodes <core-node-name> node-role.aetherproject.org=omec-upf --context <core-cluster-context>
-kubectl label nodes <core-node-name> node-role.aetherproject.org/omec-upf= --context <core-cluster-context>
+Download the iosmcn core release and run:
 
-Step 5:
-Prepare the core-cluster with required package variants
+```bash
+make 5gc-router-install
+```
 
-5a. On the Server / VM where the nephio management cluster is deployed add this git repository
+### Step 4: Label the Core Cluster
 
-cat << EOF | kubectl apply -f - 
+Replace `<core-node-name>` and `<core-cluster-context>` with your actual node name and cluster context.
+
+```bash
+kubectl label nodes <core-node-name> node-role.aetherproject.org=omec-upf \
+  --context <core-cluster-context>
+
+kubectl label nodes <core-node-name> node-role.aetherproject.org/omec-upf= \
+  --context <core-cluster-context>
+```
+
+### Step 5: Prepare the Core Cluster with Package Variants
+
+#### 5a. Register the Git Repository on the Nephio Management Cluster
+
+Run the following on the server/VM where the Nephio management cluster is deployed:
+
+```bash
+cat << EOF | kubectl apply -f -
 apiVersion: config.porch.kpt.dev/v1alpha1
 kind: Repository
 metadata:
@@ -47,75 +96,83 @@ spec:
     directory: /
     repo: https://github.com/varun-chandramouli/iosmcn-nephio-packages.git
   type: git
+EOF
+```
 
+#### 5b – 5o. Deploy via Nephio Web UI
 
-5b. Open nephio-webui  using the link :   http://<vm/server ip>:7007
+1. Open the Nephio Web UI at `http://<vm-or-server-ip>:7007`
+2. Click **mgmt** in the Repositories section on the homepage.
+3. Click **Add Deployment** (top right corner).
+4. Under **Action**, select **Create a new deployment by cloning an external blueprint**.
+5. Under **Source external blueprint repository**, select `iosmcn-nephio-packages`.
+6. Under **External blueprint to clone**, select `nephio-workload-cluster`. Click **Next**.
+7. In the **Metadata** section, change the name to `core`. Click **Next**.
+8. In the **Namespace** section, click **Next**.
+9. In the **Validate** section, click **Next**.
+10. In the **Confirm** section, click **Create Deployment**.
+11. Click **Edit** (top right corner).
+12. Click the last **WorkloadCluster** option and select **Show YAML view** in the popup.
+13. Change `masterInterface` to the VM/server's data interface on which the core cluster is deployed. Click **Save**.
+14. Click **Save** (top right). On the next screen click **Propose**, then **Approve**.
 
-5c. Click on mgmt link in the Repositories line of the  homepage. 
+> This installs the required Nephio packages for deploying workloads and creates the Gitea repository for the core cluster.
 
-5d. Click on add deployment on top right corner.
+#### 5q. Increase MULTUS Pod Memory
 
-5e. Under action select Create a new deployment by cloning a external blueprint.
+1. On the Nephio homepage, click **mgmt-staging** in the Repositories section.
+2. Select **core-multus** and click **Create New Revision**, then click **Edit**.
+3. Select **DaemonSet** and update the memory value to `500Mi` in both `requests` and `limits`. Click **Save**.
+4. Click **Save** (top right). Select **Propose**, then **Approve**.
 
-5f. Under Source external blueprint repository select iosmcn-nephio-packages.
+#### 5r. Update the RootSync with the Correct Gitea IP
 
-5g. Under external blueprint to clone select nephio-workload-cluster. Click on next
+1. On the Nephio homepage, click **mgmt-staging** in the Repositories section.
+2. Select **core-rootsync** and click **Create New Revision**, then click **Edit**.
+3. Select the **Starlark Run** option. Replace `172.x.x.x` with the IP of the VM/server where Gitea is installed (typically the same host as the Nephio management cluster). Click **Save**.
+4. Click **Save** (top right). Select **Propose**, then **Approve**.
+5. Verify the RootSync was created successfully in the core cluster:
 
-5h. In the metadata section change the name to core . Click on next.
+```bash
+kubectl get rootsyncs.configsync.gke.io --context core-admin@core -A
+```
 
-5i. In the namespace section , click on next.
+#### 5s. Deploy the iosmcn Core Flux Helm Chart
 
-5j. In the validate section , click on next.
+Deploy the `iosmcncore-flux` Helm chart using the Nephio Web UI.
 
-5k. In the confirm section , click on create deployment.
+---
 
-5l. Click on edit on the top right corner.
+## Deploying iosmcn-ran
 
-5m. Click on the last option of WorkloadCluster and click on show yaml view in the popup. 
+Perform the following steps on the server or VM where you want to deploy the **iosmcn-ran**.
 
-5n. Change the masterInterface to the VM / server's data interface on which core cluster is deployed. Click on Save
+### Step 1: Configure Hugepages
 
-5o. Click on save on top right corner.  in next screen click on propose on top right corner. In next screen click on approve. 
-
-5p. This will install the required nephio packages for the deploying workloads and also the gitea repository for core cluster. 
-
-5q. Once everything is ready we need to increase the MULTUS POD's memory  
-  a) in the nephio homepage . Click on mgmt-staging link in the Repositories secion.
-  b) select core-multus and in the next screen click on create new revision. In the next screen click on edit.
-  c) Select DaemonSet and edit the memory value to 500Mi in both requests and limits section. Click on save.
-  d) Click on save option in top right corner. Select propose and then approve.
-  
-5r.The rootsync installed in the core cluster  needs to be updated with correct IP of the core gitea repo.
- a) in the nephio homepage . Click on mgmt-staging link in the Repositories secion.
- b) select core-rootsync and in the next screen click on create new revision. In the next screen click on edit.
- c) select starlark Run option . Replace 172.x.x.x with the IP of the VM / Server where the gitea  is installed. this will usually be the same VM / server where the nephio manangement cluster is running. Click on save.
- d)  Click on save option in top right corner. Select propose and then approve.
- e) verify rootsync is created successfully in the core cluster with the command : 
-    $ kubectl get rootsyncs.configsync.gke.io --context core-admin@core -A
-
-5s. Deploy the iosmcncore-flux helm chart using the nephio web-ui.
-
-
-After provisioning the cluster using the byoh script follow the following steps on the server or VM where you want to deploy the iosmcn-ran
-
-Step 1:
-# Check current state
+```bash
+# Check current hugepage state
 cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 
-# Allocate 20 x 1Gi hugepages (leaves ~108Gi for everything else)
+# Allocate 20 x 1Gi hugepages
 echo 20 | sudo tee /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 
-# Verify it took effect
+# Verify allocation
 cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 cat /sys/kernel/mm/hugepages/hugepages-1048576kB/free_hugepages
 
-
+# Persist across reboots
 echo 'vm.nr_hugepages=20' | sudo tee /etc/sysctl.d/99-hugepages.conf
 sudo sysctl -p /etc/sysctl.d/99-hugepages.conf
+```
 
+### Step 2: Set Up the RAN Cluster
 
-Step 2:
-Repeat steps 5b to 5r , changing the name of cluster and reepo as ran . 
+Repeat [Steps 5b through 5r](#5b--5o-deploy-via-nephio-web-ui) from the core deployment, substituting `ran` for `core` wherever the cluster name or repository name is referenced.
 
-Step 3: 
-Deploy the iosmcn-ran-cucp-flux , iosmcn-ran-cuup-flux and iosmcn-ran-du-flux helm charts in that order.
+### Step 3: Deploy RAN Helm Charts
+
+Deploy the following Helm charts **in order** using the Nephio Web UI:
+
+1. `iosmcn-ran-cucp-flux`
+2. `iosmcn-ran-cuup-flux`
+3. `iosmcn-ran-du-flux`
