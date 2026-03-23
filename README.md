@@ -49,19 +49,33 @@ spec:
 
 
 5b. Open nephio-webui  using the link :   http://<vm/server ip>:7007
+
 5c. Click on mgmt link in the Repositories line of the  homepage. 
+
 5d. Click on add deployment on top right corner.
+
 5e. Under action select Create a new deployment by cloning a external blueprint.
+
 5f. Under Source external blueprint repository select iosmcn-nephio-packages.
+
 5g. Under external blueprint to clone select nephio-workload-cluster. Click on next
+
 5h. In the metadata section change the name to core . Click on next.
+
 5i. In the namespace section , click on next.
+
 5j. In the validate section , click on next.
+
 5k. In the confirm section , click on create deployment.
+
 5l. Click on edit on the top right corner.
+
 5m. Click on the last option of WorkloadCluster and click on show yaml view in the popup. 
+
 5n. Change the masterInterface to the VM / server's data interface on which core cluster is deployed. Click on Save
+
 5o. Click on save on top right corner.  in next screen click on propose on top right corner. In next screen click on approve. 
+
 5p. This will install the required nephio packages for the deploying workloads and also the gitea repository for core cluster. 
 
 5q. Once everything is ready we need to increase the MULTUS POD's memory  
@@ -69,6 +83,7 @@ spec:
   b) select core-multus and in the next screen click on create new revision. In the next screen click on edit.
   c) Select DaemonSet and edit the memory value to 500Mi in both requests and limits section. Click on save.
   d) Click on save option in top right corner. Select propose and then approve.
+  
 5r.The rootsync installed in the core cluster  needs to be updated with correct IP of the core gitea repo.
  a) in the nephio homepage . Click on mgmt-staging link in the Repositories secion.
  b) select core-rootsync and in the next screen click on create new revision. In the next screen click on edit.
@@ -89,9 +104,7 @@ spec:
 
 
 
-
 After provisioning the cluster using the byoh script follow the following steps on the server or VM where you want to deploy the iosmcn-ran
-
 
 # Check current state
 cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
