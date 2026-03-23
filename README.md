@@ -12,7 +12,7 @@ echo "fs.inotify.max_user_instances=512" | sudo tee -a /etc/sysctl.conf
 echo "fs.file-max=2097152" | sudo tee -a /etc/sysctl.conf
 
 Step 2: 
-Install the dependencies 
+# Install the dependencies 
 sudo apt update
 sudo apt updgrade -y
 sudo apt install make sshpass ansible -y
@@ -27,6 +27,7 @@ kubectl label nodes <core-node-name> node-role.aetherproject.org/omec-upf= --con
 
 Step 5:
 Prepare the core-cluster with required package variants
+
 5a. On the Server / VM where the nephio management cluster is deployed add this git repository
 
 cat << EOF | kubectl apply -f - 
@@ -92,20 +93,12 @@ spec:
  e) verify rootsync is created successfully in the core cluster with the command : 
     $ kubectl get rootsyncs.configsync.gke.io --context core-admin@core -A
 
-
-
-
-
-
-
-
-
-
-
+5s. Deploy the iosmcncore-flux helm chart using the nephio web-ui.
 
 
 After provisioning the cluster using the byoh script follow the following steps on the server or VM where you want to deploy the iosmcn-ran
 
+Step 1:
 # Check current state
 cat /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 
@@ -120,3 +113,9 @@ cat /sys/kernel/mm/hugepages/hugepages-1048576kB/free_hugepages
 echo 'vm.nr_hugepages=20' | sudo tee /etc/sysctl.d/99-hugepages.conf
 sudo sysctl -p /etc/sysctl.d/99-hugepages.conf
 
+
+Step 2:
+Repeat steps 5b to 5r , changing the name of cluster and reepo as ran . 
+
+Step 3: 
+Deploy the iosmcn-ran-cucp-flux , iosmcn-ran-cuup-flux and iosmcn-ran-du-flux helm charts in that order.
